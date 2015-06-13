@@ -1,9 +1,12 @@
 package com.chih.suexclusive;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.support.v7.app.ActionBarActivity;
@@ -11,8 +14,13 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Spinner;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -290,10 +298,28 @@ public class MainActivity extends Activity {
 //        ListView mainList = (ListView) findViewById(R.id.mainList);
 //        mainList.setAdapter(new CustomAdapter(this, listItem));
 
-        ConfigReader configReader = new ConfigReader(this);
+        final ConfigReader configReader = new ConfigReader(this);
         configReader.readConfig();
         ListView mainList = (ListView) findViewById(R.id.mainList);
         mainList.setAdapter(new CustomAdapter(this, configReader.pkgList));
+        mainList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Log.d("SUEX", "List Item Clicked: " + configReader.pkgList.get(position).name);
+
+                String[] perms = {"Deny", "Grant", "Exclusive"};
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle(configReader.pkgList.get(position).name);
+                builder.setItems(perms, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int item) {
+                        //
+                    }
+                });
+                AlertDialog alert = builder.create();
+                alert.show();
+            }
+        });
 
         (new InitEX()).setContext(this).execute();
     }
