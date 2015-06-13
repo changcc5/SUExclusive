@@ -105,6 +105,38 @@ public class MainActivity extends Activity {
         }
     }
 
+
+    private class InitUI extends AsyncTask<Void, Void, ArrayList<PackagePermission>> {
+        //read config file and create UI
+        private Context context;
+        public InitUI(Context context) {
+            this.context = context;
+        }
+        @Override
+        protected ArrayList<PackagePermission> doInBackground(Void... params) {
+            try {
+                FileInputStream is = new FileInputStream(new File(context.getFilesDir(), "su.cfg"));
+                BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+
+                while(reader.ready()) {
+                    Log.d("SUEX", "InitUI: " + reader.readLine());
+                }
+                reader.close();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<PackagePermission> result) {
+
+        }
+
+    }
+
     private class InitEX extends AsyncTask<Void, Void, Void> {
         private Context ctx;
 
@@ -194,42 +226,54 @@ public class MainActivity extends Activity {
         }
     }
 
-    public class ConfigReader {
-        //check file and update ui
-        public ArrayList<String[]> readConfig() {
-            ArrayList<String[]> config = new ArrayList<String[]>();
-
-            File appFile = new File(getFilesDir(),"su.cfg");
-            try {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(appFile)));
-                ArrayList<String> pack = new ArrayList<String>();
-                while (reader.ready()) {
-                    String line = reader.readLine();
-                    if (!line.equals("")) {
-                        pack.add(line);
-                        Log.d("SUEX", "config read: " + pack.toString());
-                    }
-                    else {
-                        String[] pkgEntry = new String[pack.size()];
-                        pkgEntry = pack.toArray(pkgEntry);
-                        config.add(pkgEntry);
-                        pack = new ArrayList<String>();
-                        Log.d("SUEX", "Create Packet Entry: " + pack.toString());
-                    }
-                }
-                reader.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            return config;
-        }
-    }
     public static ArrayList<String[]> pkgList = new ArrayList<String[]>();
 
     private void updateConfig() {
         //check pkglist and update files
     }
+
+    private class ConfigReader {
+        public ArrayList<PackagePermission> pkgList;
+
+        private Context context;
+        public ConfigReader(Context context) {
+            this.context = context;
+            pkgList = new ArrayList<PackagePermission>();
+        }
+
+        public void readConfig() {
+            try {
+                FileInputStream is = new FileInputStream(new File(context.getFilesDir(), "su.cfg"));
+                BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+                PackagePermission pkg = new PackagePermission();
+
+                while(reader.ready()) {
+                    String line = reader.readLine();
+                    Log.d("SUEX", "InitUI: " + line);
+                    if (line.startsWith("[")) {
+                        pkg.name = line;
+                    }
+                    else if (line.startsWith("uid")) {
+                        pkg.uid = line;
+                    }
+                    else if (line.startsWith("access")) {
+                        pkg.permission = line;
+                    }
+                    else if (line.isEmpty()) {
+                        pkgList.add(pkg);
+                        pkg = new PackagePermission();
+                    }
+                }
+                reader.close();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -239,13 +283,17 @@ public class MainActivity extends Activity {
         ArrayList<String> appList;
         appList = lister.listApps();
         String[] listarray = new String[appList.size()];
-        listarray = appList.toArray(listarray);
-        ListAdapter adapter = new RowAdapter(this, listarray);
-        ListView mainList = (ListView) findViewById(R.id.mainList);
-        mainList.setAdapter(adapter);
 
-        ConfigReader configReader = new ConfigReader();
-        MainActivity.pkgList = configReader.readConfig();
+
+        listarray = appList.toArray(listarray);
+//        ListAdapter adapter = new RowAdapter(this, listarray); //change to PackagePermission instead of the thing
+//        ListView mainList = (ListView) findViewById(R.id.mainList);
+//        mainList.setAdapter(new CustomAdapter(this, listItem));
+
+        ConfigReader configReader = new ConfigReader(this);
+        configReader.readConfig();
+        ListView mainList = (ListView) findViewById(R.id.mainList);
+        mainList.setAdapter(new CustomAdapter(this, configReader.pkgList));
 
         (new InitEX()).setContext(this).execute();
     }

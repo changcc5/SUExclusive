@@ -10,13 +10,7 @@ enum PermissionLevel {
 }
 public class PackagePermission {
     public String name;
-    public Integer uid;
-    public PermissionLevel permission;
-
-    public PackagePermission(String name, Integer uid, PermissionLevel permission) {
-        this.name = name;
-        this.uid = uid;
-        this.permission = permission;
-    }
+    public String uid;
+    public String permission;
 
 }
