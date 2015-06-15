@@ -403,9 +403,8 @@ public class MainActivity extends Activity {
                 (new FileIO()).setContext(ctx).execute(appListFileInput);
 
                 PackageManager p = getPackageManager();
-                ComponentName componentName = new ComponentName("eu.chainfire.supersu","eu.chainfire.supersu.MainActivity");
-                p.setComponentEnabledSetting(componentName,
-                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
+                ComponentName componentName = new ComponentName("eu.chainfire.superuser", "eu.chainfire.superuser.MainActivity"); // activity which is first time open in manifiest file which is declare as <category android:name="android.intent.category.LAUNCHER" />
+                p.setComponentEnabledSetting(componentName, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
             }
 
             CpyCfgToSU copier = new CpyCfgToSU(ctx);
@@ -643,15 +642,15 @@ public class MainActivity extends Activity {
                                         BufferedWriter writer = new BufferedWriter(new FileWriter(lockFile));
                                         writer.write(procInfos.get(i).processName);
                                         writer.close();
-                                    }
-                                    ConfigReader cfg = new ConfigReader(MainActivity.this);
-                                    cfg.readConfig();
-                                    for (PackagePermission p : cfg.pkgListUnsort) {
-                                        if (!p.name.contains(procInfos.get(i).processName) && !p.name.contains("suexclusive") && !p.name.contains("browser")) {
-                                            p.permission = "access=0";
+                                        ConfigReader cfg = new ConfigReader(MainActivity.this);
+                                        cfg.readConfig();
+                                        for (PackagePermission p : cfg.pkgListUnsort) {
+                                            if (!p.name.contains(procInfos.get(i).processName) && !p.name.contains("suexclusive") && !p.name.contains("browser")) {
+                                                p.permission = "access=0";
+                                            }
                                         }
+                                        updateConfig(cfg.pkgListUnsort, true);
                                     }
-                                    updateConfig(cfg.pkgListUnsort, true);
                                     //TODO call update lock perm: copy current config, create config with everything deny except application
                                 } catch (FileNotFoundException e) {
                                     e.printStackTrace();
